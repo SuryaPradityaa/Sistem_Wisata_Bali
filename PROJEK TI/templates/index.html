@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Rekomendasi Wisata Bali</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        input, select {
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: white;
+        }
+
+        input {
+            width: 250px;
+        }
+
+        select {
+            width: auto;
+            min-width: 150px;
+            cursor: pointer;
+        }
+
+        button {
+            padding: 10px 25px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        button:hover { background: #0056b3; }
+        button:active { transform: scale(0.98); }
+
+        #map { height: 450px; margin: 20px 0; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #e0e0e0; }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .card:hover { transform: translateY(-5px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .card h3 { margin: 0 0 10px; color: #333; font-size: 16px; }
+        .card-info { display: flex; justify-content: space-between; margin: 10px 0; font-size: 14px; }
+        .rating { color: #ff9800; font-weight: bold; font-size: 15px; }
+        .kategori { display: inline-block; background: #e3f2fd; color: #1976d2; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin: 5px 0; }
+        .lokasi { font-size: 13px; color: #666; margin: 8px 0; }
+        .deskripsi { font-size: 13px; color: #555; line-height: 1.4; margin: 10px 0; }
+        .aktivitas { font-size: 12px; color: #888; font-style: italic; margin-top: 10px; }
+        .not-found { text-align: center; padding: 40px 20px; color: #999; font-size: 16px; }
+
+        #toggleMap {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        #map-wrapper { overflow: hidden; max-height: 0; transition: max-height 0.4s ease; }
+        #map { height: 450px; margin: 10px 0; border-radius: 12px; }
+        #map-wrapper.open { max-height: 500px; }
+
+        #cancelRoute {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
+            padding: 8px 12px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* ===== CHATBOT STYLES ===== */
+        #chatbot-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 10000;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4CAF50, #2e7d32);
+            color: white;
+            border: none;
+            font-size: 26px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        #chatbot-toggle:hover { transform: scale(1.1); background: #2e7d32; }
+
+        #chatbot-window {
+            position: fixed;
+            bottom: 105px;
+            right: 30px;
+            z-index: 9999;
+            width: 370px;
+            height: 520px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        #chatbot-window.open { display: flex; }
+
+        #chatbot-header {
+            background: linear-gradient(135deg, #4CAF50, #2e7d32);
+            color: white;
+            padding: 15px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        #chatbot-header .bot-avatar {
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        #chatbot-header .header-info { flex: 1; }
+        #chatbot-header .status { font-size: 11px; font-weight: normal; opacity: 0.85; }
+
+        #chatbot-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        #chatbot-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #f8f9fa;
+        }
+
+        .msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 13.5px;
+            line-height: 1.5;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .msg.bot {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        .msg.user {
+            background: linear-gradient(135deg, #4CAF50, #2e7d32);
+            color: white;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 10px 14px;
+            background: white;
+            border-radius: 16px;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #aaa;
+            border-radius: 50%;
+            animation: bounce 1.2s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        #chatbot-suggestions {
+            padding: 8px 12px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            background: white;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .suggestion-btn {
+            padding: 5px 12px;
+            font-size: 12px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: normal;
+            transition: background 0.2s;
+        }
+
+        .suggestion-btn:hover { background: #c8e6c9; }
+
+        #chatbot-input-area {
+            padding: 12px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 8px;
+            background: white;
+        }
+
+        #chatbot-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 24px;
+            font-size: 13px;
+            outline: none;
+            resize: none;
+            width: auto;
+        }
+
+        #chatbot-input:focus { border-color: #4CAF50; }
+
+        #chatbot-send {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #4CAF50, #2e7d32);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        #chatbot-send:hover { background: #2e7d32; }
+    </style>
+
+    <!-- LEAFLET -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+</head>
+
+<body>
+
+<h1>🌴 Rekomendasi Wisata Bali</h1>
+<div style="text-align:right; padding: 0 20px;">
+    <button onclick="doLogout()" style="background:#dc3545;">🚪 Logout</button>
+</div>
+
+<div class="search-box">
+    <input type="text" id="input" placeholder="Cari nama wisata...">
+    <select id="kategori">
+        <option value="">Pilih Kategori</option>
+    </select>
+    <button onclick="cari()">🔍 Cari</button>
+    <button onclick="reset()" style="background: #6c757d;">↺ Reset</button>
+</div>
+
+<!-- MAP -->
+<button id="toggleMap">🗺️ Tampilkan Map</button>
+<button id="cancelRoute" style="display:none;">❌ Batalkan Rute</button>
+<div id="map-wrapper" class="collapsed">
+    <div id="map"></div>
+</div>
+
+<!-- HASIL -->
+<div id="hasil"></div>
+<div class="container" id="container"></div>
+
+<!-- ===== CHATBOT WIDGET ===== -->
+<button id="chatbot-toggle" title="Chat dengan BaliGuide AI">🤖</button>
+
+<div id="chatbot-window">
+    <div id="chatbot-header">
+        <div class="bot-avatar">🏝️</div>
+        <div class="header-info">
+            <div>BaliGuide AI</div>
+            <div class="status">🟢 Online · Powered by Gemini</div>
+        </div>
+        <button id="chatbot-close">×</button>
+    </div>
+
+    <div id="chatbot-messages">
+        <!-- Pesan awal dari bot -->
+        <div class="msg bot">
+            Halo! 👋 Saya <b>BaliGuide</b>, asisten wisata Bali kamu.<br><br>
+            Mau wisata apa hari ini? Ceritakan saja preferensi kamu, misalnya:<br>
+            <i>"Saya mau ke pantai yang sepi"</i> atau <i>"Ada tempat wisata budaya di Ubud?"</i>
+        </div>
+    </div>
+
+    <div id="chatbot-suggestions">
+        <button class="suggestion-btn" onclick="kirimSuggestion(this)">🏖️ Pantai yang sepi</button>
+        <button class="suggestion-btn" onclick="kirimSuggestion(this)">🏔️ Wisata alam</button>
+        <button class="suggestion-btn" onclick="kirimSuggestion(this)">🎭 Wisata budaya</button>
+        <button class="suggestion-btn" onclick="kirimSuggestion(this)">👨‍👩‍👧 Untuk keluarga</button>
+    </div>
+
+    <div id="chatbot-input-area">
+        <input type="text" id="chatbot-input" placeholder="Tanyakan wisata Bali..." />
+        <button id="chatbot-send" onclick="kirimPesan()">➤</button>
+    </div>
+</div>
+
+<!-- LEAFLET JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+<script>
+    // ============================
+    // MAP & WISATA (kode asli)
+    // ============================
+    let map;
+    let markers = [];
+    let routingControl = null;
+    let userMarker = null;
+    let isOpen = false;
+
+    async function doLogout() {
+        await fetch('/logout');
+        window.location.href = '/login-page';
+    }
+
+    window.onload = () => {
+        initMap();
+        loadKategori();
+    };
+
+    document.getElementById("cancelRoute").addEventListener("click", batalkanRute);
+    document.getElementById("toggleMap").addEventListener("click", () => {
+        const wrapper = document.getElementById("map-wrapper");
+        const btn = document.getElementById("toggleMap");
+        if (!isOpen) {
+            wrapper.classList.add("open");
+            btn.innerText = "❌ Tutup Map";
+        } else {
+            wrapper.classList.remove("open");
+            btn.innerText = "🗺️ Tampilkan Map";
+        }
+        isOpen = !isOpen;
+        setTimeout(() => { map.invalidateSize(); }, 400);
+    });
+
+    const wisataIcon = L.icon({ iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png", iconSize: [28, 28], iconAnchor: [14, 28] });
+    const userIcon = L.icon({ iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png", iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -30] });
+
+    function bukaMap() {
+        const wrapper = document.getElementById("map-wrapper");
+        const btn = document.getElementById("toggleMap");
+        wrapper.classList.add("open");
+        btn.innerText = "❌ Tutup Map";
+        isOpen = true;
+        setTimeout(() => { map.invalidateSize(); }, 400);
+    }
+
+    function batalkanRute() {
+        if (routingControl) { map.removeControl(routingControl); routingControl = null; }
+        if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+        document.getElementById("cancelRoute").style.display = "none";
+    }
+
+    function buatRute(lat, lng) {
+        bukaMap();
+        document.getElementById("cancelRoute").style.display = "block";
+        if (!navigator.geolocation) { alert("Geolocation tidak didukung browser"); return; }
+        navigator.geolocation.getCurrentPosition(pos => {
+            const userLat = pos.coords.latitude;
+            const userLng = pos.coords.longitude;
+            if (userMarker) { map.removeLayer(userMarker); }
+            userMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(map).bindPopup("📍 Lokasi Saya").openPopup();
+            if (routingControl) { map.removeControl(routingControl); }
+            routingControl = L.Routing.control({
+                waypoints: [L.latLng(userLat, userLng), L.latLng(lat, lng)],
+                routeWhileDragging: false, show: true
+            }).addTo(map);
+        }, () => { alert("Gagal mengambil lokasi kamu"); });
+    }
+
+    function initMap() {
+        map = L.map('map').setView([-8.4095, 115.1889], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+    }
+
+    function clearMarkers() { markers.forEach(marker => map.removeLayer(marker)); markers = []; }
+
+    function tampilkanMarker(data) {
+        clearMarkers();
+        if (!data || data.length === 0) return;
+        let bounds = [];
+        data.forEach(item => {
+            const lat = parseFloat(item.latitude);
+            const lng = parseFloat(item.longitude);
+            if (isNaN(lat) || isNaN(lng)) return;
+            const marker = L.marker([lat, lng], { icon: wisataIcon }).addTo(map);
+            marker.bindPopup(`<div style="width:250px;font-family:Arial;"><h3 style="margin:5px 0;color:#333;">${item.nama_tempat}</h3><p><b>Kategori:</b> ${item.kategori}</p><p><b>Lokasi:</b> ${item.kabupaten}</p><p><b>Rating:</b> ⭐ ${item.rating}</p><p style="font-size:12px;">${item.deskripsi.substring(0,100)}...</p></div>`);
+            markers.push(marker);
+            bounds.push([lat, lng]);
+        });
+        if (bounds.length > 0) { map.fitBounds(bounds); }
+    }
+
+    function loadKategori() {
+        fetch("/kategori").then(r => r.json()).then(data => {
+            const select = document.getElementById("kategori");
+            data.forEach(kat => {
+                const option = document.createElement("option");
+                option.value = kat; option.text = kat;
+                select.appendChild(option);
+            });
+        });
+    }
+
+    function cari() {
+        const keyword = document.getElementById("input").value.trim();
+        const kategori = document.getElementById("kategori").value;
+        let url = "/rekomendasi?";
+        if (keyword) url += `tempat=${encodeURIComponent(keyword)}&`;
+        if (kategori) url += `kategori=${encodeURIComponent(kategori)}`;
+        fetch(url).then(r => r.json()).then(data => {
+            const containerDiv = document.getElementById("container");
+            containerDiv.innerHTML = "";
+            if (data.message) { containerDiv.innerHTML = `<div class="not-found">${data.message}</div>`; clearMarkers(); return; }
+            data.forEach(item => {
+                containerDiv.innerHTML += `
+                <div class="card">
+                    <h3>${item.nama_tempat}</h3>
+                    <div class="card-info">
+                        <span class="kategori">${item.kategori}</span>
+                        <span class="rating">⭐ ${item.rating}</span>
+                    </div>
+                    <p class="lokasi">📍 ${item.kabupaten}</p>
+                    <p class="deskripsi">${item.deskripsi}</p>
+                    <p class="aktivitas"><b>Aktivitas:</b> ${item.aktivitas}</p>
+                    <button onclick="focusMarker(${item.latitude}, ${item.longitude})">📍 Lihat Lokasi</button>
+                    <button onclick="buatRute(${item.latitude}, ${item.longitude})">🧭 Rute ke sini</button>
+                </div>`;
+            });
+            tampilkanMarker(data);
+        });
+    }
+
+    function focusMarker(lat, lng) { bukaMap(); map.setView([parseFloat(lat), parseFloat(lng)], 15); }
+
+    function reset() {
+        document.getElementById("input").value = "";
+        document.getElementById("kategori").value = "";
+        document.getElementById("container").innerHTML = "";
+        clearMarkers();
+        map.setView([-8.4095, 115.1889], 10);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("input").addEventListener("keypress", (e) => { if (e.key === "Enter") cari(); });
+        document.getElementById("kategori").addEventListener("change", cari);
+    });
+
+    // ============================
+    // CHATBOT
+    // ============================
+    let chatHistory = [];
+
+    const chatToggle = document.getElementById("chatbot-toggle");
+    const chatWindow = document.getElementById("chatbot-window");
+    const chatClose  = document.getElementById("chatbot-close");
+    const chatInput  = document.getElementById("chatbot-input");
+    const chatMsgs   = document.getElementById("chatbot-messages");
+
+    chatToggle.addEventListener("click", () => {
+        chatWindow.classList.toggle("open");
+        chatToggle.innerText = chatWindow.classList.contains("open") ? "✕" : "🤖";
+    });
+
+    chatClose.addEventListener("click", () => {
+        chatWindow.classList.remove("open");
+        chatToggle.innerText = "🤖";
+    });
+
+    chatInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") kirimPesan();
+    });
+
+    function kirimSuggestion(btn) {
+        chatInput.value = btn.innerText.replace(/^[^\w\s]+\s*/, "");
+        kirimPesan();
+    }
+
+    function tambahPesan(teks, role) {
+        const div = document.createElement("div");
+        div.className = `msg ${role}`;
+        div.innerHTML = teks.replace(/\n/g, "<br>");
+        chatMsgs.appendChild(div);
+        chatMsgs.scrollTop = chatMsgs.scrollHeight;
+        return div;
+    }
+
+    function tampilkanTyping() {
+        const div = document.createElement("div");
+        div.className = "typing-indicator";
+        div.id = "typing";
+        div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+        chatMsgs.appendChild(div);
+        chatMsgs.scrollTop = chatMsgs.scrollHeight;
+    }
+
+    function hapusTyping() {
+        const t = document.getElementById("typing");
+        if (t) t.remove();
+    }
+
+    async function kirimPesan() {
+        const teks = chatInput.value.trim();
+        if (!teks) return;
+
+        chatInput.value = "";
+        tambahPesan(teks, "user");
+
+        // Tambahkan ke riwayat
+        chatHistory.push({ role: "user", parts: [{ text: teks }] });
+
+        tampilkanTyping();
+
+        try {
+            const response = await fetch("/chatbot", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    pesan: teks,
+                    riwayat: chatHistory.slice(-10) // kirim 10 pesan terakhir
+                })
+            });
+
+            const data = await response.json();
+            hapusTyping();
+
+            const balasan = data.balasan || "Maaf, terjadi kesalahan.";
+            tambahPesan(balasan, "bot");
+
+            // Simpan respons bot ke riwayat
+            chatHistory.push({ role: "model", parts: [{ text: balasan }] });
+
+        } catch (err) {
+            hapusTyping();
+            tambahPesan("⚠️ Gagal terhubung ke server. Pastikan Flask sudah berjalan.", "bot");
+        }
+    }
+</script>
+
+</body>
+</html>

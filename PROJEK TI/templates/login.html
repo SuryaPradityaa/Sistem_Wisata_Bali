@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Wisata Bali</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary:   #007bff;
+            --primary-d: #0056b3;
+            --success:   #28a745;
+            --danger:    #dc3545;
+            --bg:        #f0f4f8;
+            --card:      #ffffff;
+            --text:      #333;
+            --muted:     #888;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(0,123,255,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(0,86,179,0.06) 0%, transparent 50%);
+        }
+
+        .wrapper { width: 100%; max-width: 440px; }
+
+        .logo { text-align: center; margin-bottom: 28px; }
+        .logo h1 { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--primary); letter-spacing: 0.5px; }
+        .logo p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+        .tab-bar { display: flex; background: #e9ecef; border-radius: 10px; padding: 4px; margin-bottom: 24px; }
+        .tab-bar button { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-size: 14px; font-weight: 700; font-family: 'Nunito', sans-serif; color: var(--muted); cursor: pointer; transition: all 0.25s; }
+        .tab-bar button.active { background: var(--card); color: var(--primary); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+
+        .card { background: var(--card); border-radius: 16px; padding: 32px 28px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+
+        .form-panel { display: none; }
+        .form-panel.active { display: block; }
+
+        .form-panel h2 { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--text); margin-bottom: 6px; }
+        .form-panel p.sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+        .field { margin-bottom: 16px; }
+        .field label { display: block; font-size: 13px; font-weight: 700; color: #555; margin-bottom: 6px; }
+        .field input { width: 100%; padding: 11px 14px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Nunito', sans-serif; color: var(--text); background: #fafafa; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+        .field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,123,255,0.12); background: #fff; }
+
+        .btn-submit { width: 100%; padding: 13px; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; font-family: 'Nunito', sans-serif; cursor: pointer; margin-top: 8px; transition: background 0.25s, transform 0.1s; }
+        .btn-submit:active { transform: scale(0.98); }
+        #btn-login    { background: var(--primary); color: white; }
+        #btn-login:hover    { background: var(--primary-d); }
+        #btn-register { background: var(--success);  color: white; }
+        #btn-register:hover { background: #218838; }
+
+        .alert { padding: 11px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 16px; display: none; }
+        .alert.show { display: block; }
+        .alert.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert.error   { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        .footer-note { text-align: center; margin-top: 20px; font-size: 12px; color: var(--muted); }
+        .footer-note a { color: var(--primary); text-decoration: none; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+    <div class="logo">
+        <h1>🌴 Wisata Bali</h1>
+        <p>Temukan destinasi terbaik di Pulau Dewata</p>
+    </div>
+
+    <div class="tab-bar">
+        <button class="active" onclick="switchTab('login')">Masuk</button>
+        <button onclick="switchTab('register')">Daftar</button>
+    </div>
+
+    <div class="card">
+
+        <!-- LOGIN PANEL -->
+        <div class="form-panel active" id="panel-login">
+            <h2>Selamat Datang</h2>
+            <p class="sub">Masuk untuk melihat rekomendasi wisata</p>
+
+            <div class="alert" id="alert-login"></div>
+
+            <div class="field">
+                <label>Nama</label>
+                <input type="text" id="login-nama" placeholder="Nama kamu">
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <input type="password" id="login-password" placeholder="••••••••">
+            </div>
+
+            <button class="btn-submit" id="btn-login" onclick="doLogin()">Masuk</button>
+        </div>
+
+        <!-- REGISTER PANEL -->
+        <div class="form-panel" id="panel-register">
+            <h2>Buat Akun Baru</h2>
+            <p class="sub">Daftar gratis dan mulai jelajahi Bali</p>
+
+            <div class="alert" id="alert-register"></div>
+
+            <div class="field">
+                <label>Nama Lengkap</label>
+                <input type="text" id="reg-nama" placeholder="Nama kamu">
+            </div>
+            <div class="field">
+                <label>Gmail</label>
+                <input type="email" id="reg-gmail" placeholder="contoh@gmail.com">
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <input type="password" id="reg-password" placeholder="Minimal 6 karakter">
+            </div>
+
+            <button class="btn-submit" id="btn-register" onclick="doRegister()">Daftar Sekarang</button>
+        </div>
+
+    </div>
+
+    <p class="footer-note">
+        Sudah punya akun? <a href="#" onclick="switchTab('login')">Masuk di sini</a>
+    </p>
+
+</div>
+
+<script>
+    function switchTab(tab) {
+        document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+        document.getElementById('panel-' + tab).classList.add('active');
+        document.querySelectorAll('.tab-bar button')[tab === 'login' ? 0 : 1].classList.add('active');
+        hideAlert('login');
+        hideAlert('register');
+    }
+
+    function showAlert(type, msg, isError = false) {
+        const el = document.getElementById('alert-' + type);
+        el.textContent = msg;
+        el.className = 'alert show ' + (isError ? 'error' : 'success');
+    }
+
+    function hideAlert(type) {
+        document.getElementById('alert-' + type).className = 'alert';
+    }
+
+    async function doLogin() {
+        const nama     = document.getElementById('login-nama').value.trim();
+        const password = document.getElementById('login-password').value;
+
+        if (!nama || !password) {
+            showAlert('login', 'Nama dan password wajib diisi.', true);
+            return;
+        }
+
+        const btn = document.getElementById('btn-login');
+        btn.textContent = 'Memproses...';
+        btn.disabled = true;
+
+        try {
+            const res  = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nama, password })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                showAlert('login', '✅ ' + data.message);
+                setTimeout(() => window.location.href = '/ui', 1000);
+            } else {
+                showAlert('login', '❌ ' + data.message, true);
+            }
+        } catch (err) {
+            showAlert('login', '❌ Gagal terhubung ke server.', true);
+        } finally {
+            btn.textContent = 'Masuk';
+            btn.disabled = false;
+        }
+    }
+
+    async function doRegister() {
+        const nama     = document.getElementById('reg-nama').value.trim();
+        const gmail    = document.getElementById('reg-gmail').value.trim();
+        const password = document.getElementById('reg-password').value;
+
+        if (!nama || !gmail || !password) {
+            showAlert('register', 'Semua field wajib diisi.', true);
+            return;
+        }
+        if (!gmail.includes('@')) {
+            showAlert('register', 'Format gmail tidak valid.', true);
+            return;
+        }
+        if (password.length < 6) {
+            showAlert('register', 'Password minimal 6 karakter.', true);
+            return;
+        }
+
+        const btn = document.getElementById('btn-register');
+        btn.textContent = 'Mendaftarkan...';
+        btn.disabled = true;
+
+        try {
+            const res  = await fetch('/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nama, gmail, password })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                showAlert('register', '✅ ' + data.message + ' Silakan masuk.');
+                setTimeout(() => switchTab('login'), 1500);
+            } else {
+                showAlert('register', '❌ ' + data.message, true);
+            }
+        } catch (err) {
+            showAlert('register', '❌ Gagal terhubung ke server.', true);
+        } finally {
+            btn.textContent = 'Daftar Sekarang';
+            btn.disabled = false;
+        }
+    }
+
+    document.addEventListener('keypress', e => {
+        if (e.key !== 'Enter') return;
+        const active = document.querySelector('.form-panel.active').id;
+        if (active === 'panel-login')    doLogin();
+        if (active === 'panel-register') doRegister();
+    });
+</script>
+
+</body>
+</html>
